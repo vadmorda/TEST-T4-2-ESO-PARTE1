@@ -1,523 +1,138 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>Test · al-Ándalus (1–3) · Práctica</title>
-<style>
-  *{box-sizing:border-box}
-  body{
-    margin:0;padding:0;min-height:100vh;
-    font-family:system-ui,-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Arial,sans-serif;
-    display:flex;align-items:center;justify-content:center;
-    background:
-      radial-gradient(circle at 0% 0%, #38bdf8 0, transparent 45%),
-      radial-gradient(circle at 100% 100%, #a855f7 0, transparent 45%),
-      radial-gradient(circle at 0% 100%, #22c55e 0, transparent 40%),
-      #020617;
-    color:#e5e7eb;
-  }
-  .shell{width:100%;max-width:980px;padding:20px}
-  .card{
-    position:relative;background:rgba(15,23,42,.82);
-    border-radius:24px;padding:24px 26px 22px;
-    box-shadow:0 22px 60px rgba(15,23,42,.8);
-    border:1px solid rgba(148,163,184,.35);
-    backdrop-filter:blur(18px);
-    overflow:hidden;
-  }
-  .card::before{
-    content:"";position:absolute;inset:0;
-    background:
-      radial-gradient(circle at 0 0, rgba(56,189,248,.18), transparent 55%),
-      radial-gradient(circle at 100% 100%, rgba(168,85,247,.18), transparent 55%);
-    opacity:.9;pointer-events:none;
-  }
-  .card-inner{position:relative;z-index:1}
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Test · al-Ándalus (1–3) · Práctica</title>
+  <style>
+    *{box-sizing:border-box}
+    body{
+      margin:0;padding:0;min-height:100vh;
+      font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;
+      display:flex;align-items:center;justify-content:center;
+      background:
+        radial-gradient(circle at 0% 0%, #38bdf8 0, transparent 45%),
+        radial-gradient(circle at 100% 100%, #a855f7 0, transparent 45%),
+        radial-gradient(circle at 0% 100%, #22c55e 0, transparent 40%),
+        #020617;
+      color:#e5e7eb;
+    }
+    .shell{width:100%;max-width:980px;padding:20px}
+    .card{
+      position:relative;background:rgba(15,23,42,.82);
+      border-radius:24px;padding:24px 26px 22px;
+      box-shadow:0 22px 60px rgba(15,23,42,.8);
+      border:1px solid rgba(148,163,184,.35);
+      backdrop-filter:blur(18px);
+      overflow:hidden;
+    }
+    .card::before{
+      content:"";position:absolute;inset:0;
+      background:
+        radial-gradient(circle at 0 0, rgba(56,189,248,.18), transparent 55%),
+        radial-gradient(circle at 100% 100%, rgba(168,85,247,.18), transparent 55%);
+      opacity:.9;pointer-events:none;
+    }
+    .card-inner{position:relative;z-index:1}
+    h1{margin:0 0 6px;text-align:center;font-size:1.45rem;font-weight:800;color:#f9fafb}
+    .tagline{margin:0 0 16px;text-align:center;font-size:.9rem;color:#9ca3af}
+    .progress-wrap{margin-bottom:10px}
+    .progress-bar-bg{width:100%;height:9px;border-radius:999px;background:rgba(15,23,42,.9);border:1px solid rgba(55,65,81,.9);overflow:hidden}
+    .progress-bar-fill{height:100%;width:0%;border-radius:999px;background:linear-gradient(90deg,#22c55e,#38bdf8,#a855f7);transition:width .2s ease}
+    .progress-label{margin-top:4px;font-size:.78rem;text-align:right;color:#9ca3af}
 
-  h1{margin:0 0 3px;text-align:center;font-size:1.45rem;font-weight:800;color:#f9fafb}
-  .tagline{margin:0 0 16px;text-align:center;font-size:.9rem;color:#9ca3af}
-  .pill-row{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:14px;font-size:.8rem;color:#9ca3af}
-  .pill{
-    padding:5px 11px;border-radius:999px;border:1px solid rgba(148,163,184,.6);
-    background:rgba(15,23,42,.8);display:inline-flex;align-items:center;gap:6px
-  }
-  .pill .dot{width:7px;height:7px;border-radius:50%;background:#22c55e;display:inline-block}
+    .question-text{margin:12px 0}
+    .q-es{display:block;font-size:1.02rem;font-weight:700;color:#e5e7eb;margin-bottom:3px}
+    .q-hint{display:block;font-size:.9rem;color:#cbd5f5;opacity:.92}
 
-  .progress-wrap{margin-bottom:10px}
-  .progress-bar-bg{width:100%;height:9px;border-radius:999px;background:rgba(15,23,42,.9);border:1px solid rgba(55,65,81,.9);overflow:hidden}
-  .progress-bar-fill{height:100%;width:0%;border-radius:999px;background:linear-gradient(90deg,#22c55e,#38bdf8,#a855f7);box-shadow:0 0 8px rgba(56,189,248,.8);transition:width .28s ease}
-  .progress-label{margin-top:4px;font-size:.78rem;text-align:right;color:#9ca3af}
+    .q-image{margin:10px 0 12px;border-radius:16px;border:1px solid rgba(148,163,184,.45);overflow:hidden;background:rgba(15,23,42,.6)}
+    .q-image img{display:block;width:100%;height:auto}
+    .q-credit{padding:8px 10px;font-size:.76rem;color:#9ca3af;border-top:1px solid rgba(148,163,184,.25)}
+    .q-credit a{color:#a5b4fc;text-decoration:none}
+    .q-credit a:hover{text-decoration:underline}
 
-  .question-block{margin-top:12px}
-  .question-text{margin-bottom:12px}
-  .q-es{display:block;font-size:1.02rem;font-weight:700;color:#e5e7eb;margin-bottom:3px}
-  .q-hint{display:block;font-size:.9rem;color:#cbd5f5;opacity:.92}
+    .options{margin-top:10px}
+    .option{
+      border-radius:14px;border:1px solid rgba(148,163,184,.5);
+      padding:9px 11px;margin-bottom:8px;
+      display:flex;gap:8px;cursor:pointer;
+      background:radial-gradient(circle at 0 0, rgba(148,163,184,.18), transparent 60%);
+    }
+    .option input{margin-top:3px;accent-color:#38bdf8}
+    .short-answer{
+      width:100%;margin-top:8px;padding:10px 12px;border-radius:14px;
+      border:1px solid rgba(148,163,184,.7);
+      background:rgba(15,23,42,.8);color:#e5e7eb;font-size:.97rem;outline:none;
+    }
 
-  .q-image{
-    margin:10px 0 12px;
-    border-radius:16px;
-    border:1px solid rgba(148,163,184,.45);
-    overflow:hidden;
-    background:rgba(15,23,42,.6);
-  }
-  .q-image img{display:block;width:100%;height:auto}
-  .q-credit{
-    padding:8px 10px;
-    font-size:.76rem;
-    color:#9ca3af;
-    border-top:1px solid rgba(148,163,184,.25);
-    line-height:1.25;
-  }
-  .q-credit a{color:#a5b4fc;text-decoration:none}
-  .q-credit a:hover{text-decoration:underline}
+    .nav-row{margin-top:18px;display:flex;justify-content:space-between;gap:8px}
+    .btn{
+      border-radius:999px;border:none;padding:9px 18px;font-size:.92rem;font-weight:700;
+      cursor:pointer;display:inline-flex;align-items:center;gap:6px;white-space:nowrap;
+    }
+    .btn-primary{background:linear-gradient(135deg,#38bdf8,#6366f1);color:#0f172a}
+    .btn-ghost{background:transparent;color:#e5e7eb;border:1px solid rgba(148,163,184,.7)}
+    .btn:disabled{opacity:.4;cursor:default}
 
-  .options{margin-top:10px}
-  .option{
-    border-radius:14px;border:1px solid rgba(148,163,184,.5);
-    padding:9px 11px 8px;margin-bottom:8px;
-    display:flex;align-items:flex-start;gap:8px;cursor:pointer;
-    background:radial-gradient(circle at 0 0, rgba(148,163,184,.18), transparent 60%);
-    transition:border-color .15s ease, transform .05s ease, background .15s ease;
-  }
-  .option:hover{border-color:#38bdf8;transform:translateY(-1px);background:radial-gradient(circle at 0 0, rgba(56,189,248,.22), transparent 65%)}
-  .option input{margin-top:4px;accent-color:#38bdf8;cursor:pointer}
-  .option-text{font-size:.95rem;color:#e5e7eb}
+    .hidden{display:none}
+    .err{
+      margin-top:12px;padding:10px 12px;border-radius:14px;
+      border:1px solid rgba(239,68,68,.55);
+      background:rgba(127,29,29,.25);
+      color:#fecaca;font-size:.88rem;white-space:pre-wrap;
+    }
 
-  .short-answer{
-    width:100%;margin-top:8px;padding:10px 12px;border-radius:14px;
-    border:1px solid rgba(148,163,184,.7);
-    background:rgba(15,23,42,.8);color:#e5e7eb;font-size:.97rem;outline:none;
-  }
-  .short-answer::placeholder{color:#6b7280}
-  .short-answer:focus{border-color:#38bdf8;box-shadow:0 0 0 1px rgba(56,189,248,.55);background:rgba(15,23,42,.95)}
-  .hint{margin-top:6px;font-size:.78rem;color:#9ca3af}
-
-  .nav-row{margin-top:18px;display:flex;justify-content:space-between;gap:8px}
-  .btn{
-    border-radius:999px;border:none;padding:9px 18px;font-size:.92rem;font-weight:600;
-    cursor:pointer;display:inline-flex;align-items:center;gap:6px;
-    transition:transform .07s ease, box-shadow .2s ease, background .15s ease, color .15s ease;
-    white-space:nowrap;
-  }
-  .btn-primary{background:linear-gradient(135deg,#38bdf8,#6366f1);color:#0f172a;box-shadow:0 14px 30px rgba(56,189,248,.45)}
-  .btn-primary:hover{transform:translateY(-1px);box-shadow:0 18px 40px rgba(56,189,248,.6);background:linear-gradient(135deg,#22c55e,#6366f1)}
-  .btn-ghost{background:transparent;color:#e5e7eb;border:1px solid rgba(148,163,184,.7)}
-  .btn-ghost:hover{background:rgba(15,23,42,.85);transform:translateY(-1px)}
-  .btn:disabled{opacity:.4;cursor:default;transform:none;box-shadow:none}
-
-  .hidden{display:none}
-
-  /* Error panel */
-  .err{
-    margin:10px 0 0;
-    padding:10px 12px;
-    border-radius:14px;
-    border:1px solid rgba(239,68,68,.55);
-    background:rgba(127,29,29,.25);
-    color:#fecaca;
-    font-size:.88rem;
-    line-height:1.25;
-    white-space:pre-wrap;
-  }
-
-  /* Feedback modal */
-  .overlay{
-    position:fixed;inset:0;background:rgba(2,6,23,.72);
-    display:flex;align-items:center;justify-content:center;padding:18px;
-    z-index:9999;
-  }
-  .modal{
-    width:min(720px, 100%);
-    border-radius:20px;
-    background:rgba(15,23,42,.92);
-    border:1px solid rgba(148,163,184,.4);
-    box-shadow:0 22px 70px rgba(0,0,0,.55);
-    padding:16px 16px 14px;
-  }
-  .modal h3{margin:0 0 8px;font-size:1.08rem;color:#f9fafb}
-  .badge{
-    display:inline-flex;align-items:center;gap:8px;
-    padding:6px 10px;border-radius:999px;
-    border:1px solid rgba(148,163,184,.35);
-    background:rgba(15,23,42,.75);
-    margin-bottom:10px;
-    font-size:.86rem;
-  }
-  .badge.ok{color:#bbf7d0;border-color:rgba(34,197,94,.4)}
-  .badge.no{color:#fecaca;border-color:rgba(239,68,68,.45)}
-  .explain{color:#e5e7eb;font-size:.95rem;line-height:1.35}
-  .explain strong{color:#a5b4fc}
-  .modal .row{margin-top:14px;display:flex;justify-content:flex-end;gap:10px;flex-wrap:wrap}
-
-  #result-card h2{font-size:1.3rem;margin:0 0 10px}
-  .summary{margin-top:10px;font-size:.98rem;color:#e5e7eb}
-  .summary strong{color:#a5b4fc}
-  .list-fails{margin-top:12px;max-height:260px;overflow:auto;padding-right:6px;font-size:.92rem;color:#e5e7eb}
-  .list-fails li{margin-bottom:10px;padding-bottom:8px;border-bottom:1px dashed rgba(148,163,184,.45)}
-  .list-fails .qtitle{display:block;font-weight:700}
-  .list-fails .why{display:block;margin-top:3px;color:#cbd5f5;opacity:.95}
-
-  @media (max-width:640px){
-    .card{padding:18px 16px 16px;border-radius:18px}
-    h1{font-size:1.2rem}
-    .nav-row{flex-direction:column-reverse}
-    .btn{width:100%;justify-content:center}
-    .progress-label{text-align:left}
-  }
-</style>
+    /* Modal feedback */
+    .overlay{position:fixed;inset:0;background:rgba(2,6,23,.72);display:flex;align-items:center;justify-content:center;padding:18px;z-index:9999}
+    .modal{width:min(720px, 100%);border-radius:20px;background:rgba(15,23,42,.92);border:1px solid rgba(148,163,184,.4);padding:16px}
+    .badge{display:inline-flex;align-items:center;gap:8px;padding:6px 10px;border-radius:999px;border:1px solid rgba(148,163,184,.35);background:rgba(15,23,42,.75);margin-bottom:10px}
+    .badge.ok{color:#bbf7d0;border-color:rgba(34,197,94,.4)}
+    .badge.no{color:#fecaca;border-color:rgba(239,68,68,.45)}
+    .explain{color:#e5e7eb;font-size:.95rem;line-height:1.35}
+    .explain strong{color:#a5b4fc}
+    .row{margin-top:14px;display:flex;justify-content:flex-end;gap:10px;flex-wrap:wrap}
+  </style>
 </head>
 
 <body>
-<div class="shell">
+  <div class="shell">
+    <div id="test-card" class="card">
+      <div class="card-inner">
+        <h1>Test · al-Ándalus (1–3)</h1>
+        <div class="tagline">Modo práctica (para aprender)</div>
 
-  <div id="test-card" class="card">
-    <div class="card-inner">
-      <h1>Test · al-Ándalus (apartados 1–3)</h1>
-      <div class="tagline">Geografía e Historia · Modo práctica (para aprender)</div>
+        <div class="progress-wrap">
+          <div class="progress-bar-bg">
+            <div id="progress-bar" class="progress-bar-fill"></div>
+          </div>
+          <div id="progress-label" class="progress-label"></div>
+        </div>
 
-      <div class="pill-row">
-        <div class="pill"><span class="dot"></span><span>Conquista, califato y taifas</span></div>
-        <div class="pill"><span>40 preguntas · mixto</span></div>
+        <div id="question-container"></div>
+
+        <div class="nav-row">
+          <button id="btn-prev" class="btn btn-ghost">◀ Anterior</button>
+          <button id="btn-next" class="btn btn-primary">Comprobar y seguir ▶</button>
+        </div>
+
+        <div id="err" class="err hidden"></div>
       </div>
-
-      <div class="progress-wrap">
-        <div class="progress-bar-bg"><div id="progress-bar" class="progress-bar-fill"></div></div>
-        <div id="progress-label" class="progress-label"></div>
-      </div>
-
-      <div id="question-container" class="question-block"></div>
-      <div id="err" class="err hidden"></div>
     </div>
-  </div>
 
-  <div id="result-card" class="card hidden">
-    <div class="card-inner" id="result-content"></div>
-  </div>
-
-</div>
-
-<div id="overlay" class="overlay hidden" role="dialog" aria-modal="true">
-  <div class="modal">
-    <div id="fb-badge" class="badge"></div>
-    <h3 id="fb-title"></h3>
-    <div id="fb-explain" class="explain"></div>
-    <div class="row">
-      <button class="btn btn-ghost" onclick="cerrarFeedback()">Cerrar</button>
-      <button class="btn btn-primary" onclick="continuarTrasFeedback()">Continuar ▶</button>
-    </div>
-  </div>
-</div>
-
-<script>
-/* Mostrar errores en pantalla (para no “quedarse en blanco”) */
-window.addEventListener("error", (e) => {
-  const box = document.getElementById("err");
-  if (!box) return;
-  box.classList.remove("hidden");
-  box.textContent =
-    "⚠️ Error de JavaScript:\n" +
-    (e.message || "Error") +
-    (e.filename ? ("\nArchivo: " + e.filename) : "") +
-    (typeof e.lineno === "number" ? ("\nLínea: " + e.lineno) : "");
-});
-
-/* Imágenes libres (si fallan, NO bloquean el test) */
-const IMG = {
-  mezquita: {
-    src: "https://commons.wikimedia.org/wiki/Special:FilePath/C%C3%B3rdoba%20-%20Mezquita-Catedral%20-%20Interior%20-%2004.jpg?width=1200",
-    credit: "Wikimedia Commons (CC BY-SA).",
-    link: "https://commons.wikimedia.org/wiki/File:C%C3%B3rdoba_-_Mezquita-Catedral_-_Interior_-_04.jpg"
-  },
-  medinaAzahara: {
-    src: "https://commons.wikimedia.org/wiki/Special:FilePath/Cordoba%20-%20Medina%20Azahara%2007.jpg?width=1200",
-    credit: "Wikimedia Commons (CC BY-SA).",
-    link: "https://commons.wikimedia.org/wiki/File:Cordoba_-_Medina_Azahara_07.jpg"
-  },
-  torreOro: {
-    src: "https://commons.wikimedia.org/wiki/Special:FilePath/Torre%20del%20Oro%2C%20Seville%2C%20Spain.jpg?width=1200",
-    credit: "Wikimedia Commons (CC BY-SA).",
-    link: "https://commons.wikimedia.org/wiki/File:Torre_del_Oro,_Seville,_Spain.jpg"
-  },
-  patioLeones: {
-    src: "https://commons.wikimedia.org/wiki/Special:FilePath/Patio%20de%20los%20Leones%20Alhambra%20Granada.jpg?width=1200",
-    credit: "Wikimedia Commons (licencia en Commons).",
-    link: "https://commons.wikimedia.org/wiki/File:Patio_de_los_Leones_Alhambra_Granada.jpg"
-  },
-  mapConquista711: {
-    src: "https://commons.wikimedia.org/wiki/Special:FilePath/Al-Andalus-711-end.svg?width=1200",
-    credit: "Wikimedia Commons.",
-    link: "https://commons.wikimedia.org/wiki/File:Al-Andalus-711-end.svg"
-  },
-  // Si este mapa concreto no carga, no pasa nada; sigue funcionando el test.
-  mapAlmanzor: {
-    src: "https://commons.wikimedia.org/wiki/Special:FilePath/Map%20Almanzor%20campaigns-es.svg?width=1200",
-    credit: "Wikimedia Commons.",
-    link: "https://commons.wikimedia.org/wiki/File:Map_Almanzor_campaigns-es.svg"
-  },
-  mapTaifas1030: {
-    src: "https://commons.wikimedia.org/wiki/Special:FilePath/Map%20Iberian%20Peninsula%201030-es.svg?width=1200",
-    credit: "Wikimedia Commons.",
-    link: "https://commons.wikimedia.org/wiki/File:Map_Iberian_Peninsula_1030-es.svg"
-  },
-  batallaNavas: {
-    src: "https://commons.wikimedia.org/wiki/Special:FilePath/Battle%20of%20las%20navas%20de%20tolosa.jpg?width=1200",
-    credit: "Wikimedia Commons (dominio público / PD).",
-    link: "https://commons.wikimedia.org/wiki/File:Battle_of_las_navas_de_tolosa.jpg"
-  },
-  abdRahmanIII: {
-    src: "https://commons.wikimedia.org/wiki/Special:FilePath/Abd%20al%20Rahman%20III.jpg?width=900",
-    credit: "Wikimedia Commons (PD/según ficha).",
-    link: "https://commons.wikimedia.org/wiki/File:Abd_al_Rahman_III.jpg"
-  }
-};
-
-function normalizar(str){
-  return String(str)
-    .toLowerCase()
-    .normalize("NFD").replace(/[\u0300-\u036f]/g,"")
-    .replace(/[^a-z0-9\s-]/g,"")
-    .trim()
-    .replace(/\s+/g," ");
-}
-function esMulti(q){ return q.tipo === "multi" || q.tipo === "img-multi"; }
-function esCorta(q){ return q.tipo === "corta" || q.tipo === "img-corta"; }
-function coincideCorta(dado, esperados){
-  const d = normalizar(dado);
-  return (esperados || []).some(e => normalizar(e) === d);
-}
-
-/* ======= PREGUNTAS (mismo bloque que te pasé antes) ======= */
-/* OJO: aquí solo pongo 5 para probar el funcionamiento.
-   Cuando confirmes que ya se ve y avanza, pego las 40 completas
-   (o te las dejo en un JSON aparte). */
-const preguntas = [
-  {
-    tipo:"multi",
-    es:"¿En qué año comenzó la conquista musulmana de la Península Ibérica?",
-    hint:"Dato clave de inicio.",
-    opciones:["711","732","756"],
-    correcta:0,
-    explicacion:"Comienza en <strong>711</strong> con la victoria musulmana en Guadalete."
-  },
-  {
-    tipo:"img-multi",
-    es:"Observa la imagen. ¿Qué monumento es?",
-    hint:"Arcos bicolores muy característicos.",
-    img: IMG.mezquita,
-    opciones:["La Mezquita de Córdoba","La Alhambra","La Giralda"],
-    correcta:0,
-    explicacion:"Es la <strong>Mezquita de Córdoba</strong>, clave en época de al-Ándalus."
-  },
-  {
-    tipo:"corta",
-    es:"Escribe el año del inicio del califato de Córdoba (solo números).",
-    hint:"Abderramán III.",
-    respuestas:["929"],
-    explicacion:"El califato comienza en <strong>929</strong>."
-  },
-  {
-    tipo:"multi",
-    es:"¿En qué año desaparece el califato y se fragmenta al-Ándalus?",
-    hint:"Inicio del periodo de taifas.",
-    opciones:["1031","1086","1212"],
-    correcta:0,
-    explicacion:"En <strong>1031</strong> se considera que desaparece el califato."
-  },
-  {
-    tipo:"img-multi",
-    es:"Observa la imagen. ¿Qué lugar nazarí es?",
-    hint:"Patio muy famoso.",
-    img: IMG.patioLeones,
-    opciones:["Patio de los Leones (Alhambra)","Mezquita de Córdoba","Torre del Oro"],
-    correcta:0,
-    explicacion:"Es el <strong>Patio de los Leones</strong> en la <strong>Alhambra</strong>."
-  }
-];
-
-/* ======= LÓGICA ======= */
-let orden = [...preguntas.keys()];
-function barajar(arr){
-  for(let i=arr.length-1;i>0;i--){
-    const j=Math.floor(Math.random()*(i+1));
-    [arr[i],arr[j]]=[arr[j],arr[i]];
-  }
-}
-barajar(orden);
-
-let indice = 0;
-let respuestasUsuario = new Array(preguntas.length).fill(null);
-let ultimoFeedback = null;
-
-function actualizarProgreso(){
-  const barra=document.getElementById("progress-bar");
-  const label=document.getElementById("progress-label");
-  const porcentaje=((indice+1)/preguntas.length)*100;
-  barra.style.width=porcentaje+"%";
-  label.textContent=`Pregunta ${indice+1} de ${preguntas.length}`;
-}
-
-function renderPregunta(){
-  const cont=document.getElementById("question-container");
-  const idxPregunta=orden[indice];
-  const q=preguntas[idxPregunta];
-
-  actualizarProgreso();
-
-  let html = `
-    <div class="question-text">
-      <span class="q-es">${q.es}</span>
-      <span class="q-hint">${q.hint ?? ""}</span>
-    </div>
-  `;
-
-  if(q.img){
-    html += `
-      <div class="q-image">
-        <img src="${q.img.src}" alt="Imagen de apoyo"
-             onerror="this.closest('.q-image').style.display='none';">
-        <div class="q-credit">
-          ${q.img.credit} · <a href="${q.img.link}" target="_blank" rel="noopener">Fuente/licencia</a>
+    <div id="overlay" class="overlay hidden" aria-modal="true" role="dialog">
+      <div class="modal">
+        <div id="fb-badge" class="badge"></div>
+        <h3 id="fb-title" style="margin:0 0 8px;color:#f9fafb"></h3>
+        <div id="fb-explain" class="explain"></div>
+        <div class="row">
+          <button id="btn-close" class="btn btn-ghost">Cerrar</button>
+          <button id="btn-continue" class="btn btn-primary">Continuar ▶</button>
         </div>
       </div>
-    `;
-  }
-
-  if(esMulti(q)){
-    html += `<div class="options">`;
-    const respGuardada = respuestasUsuario[idxPregunta];
-    q.opciones.forEach((op,iOp)=>{
-      const checked = respGuardada===iOp ? "checked" : "";
-      html += `
-        <label class="option">
-          <input type="radio" name="resp" value="${iOp}" ${checked}>
-          <div class="option-text">${op}</div>
-        </label>
-      `;
-    });
-    html += `</div>`;
-  } else if (esCorta(q)) {
-    const valor = respuestasUsuario[idxPregunta] ?? "";
-    html += `
-      <input id="short-answer" class="short-answer" type="text"
-        value="${valor}"
-        placeholder="Respuesta muy breve (1–3 palabras)">
-      <div class="hint">Escribe lo mínimo imprescindible</div>
-    `;
-  } else {
-    // Si un tipo está mal escrito, lo verás aquí:
-    html += `<div class="err">Tipo de pregunta desconocido: ${q.tipo}</div>`;
-  }
-
-  html += `
-    <div class="nav-row">
-      <button class="btn btn-ghost" onclick="anterior()" ${indice===0 ? "disabled":""}>◀ Anterior</button>
-      <button class="btn btn-primary" onclick="siguiente()">
-        ${indice===preguntas.length-1 ? "Comprobar y terminar" : "Comprobar y seguir ▶"}
-      </button>
     </div>
-  `;
+  </div>
 
-  cont.innerHTML = html;
-}
-
-function guardarYCorregirActual(){
-  const idxPregunta=orden[indice];
-  const q=preguntas[idxPregunta];
-
-  if(esMulti(q)){
-    const marcada=document.querySelector("input[name='resp']:checked");
-    if(!marcada) return {ok:null, reason:"Marca una opción."};
-    const val=parseInt(marcada.value,10);
-    respuestasUsuario[idxPregunta]=val;
-    return {ok: (val===q.correcta), q, idxPregunta};
-  }
-
-  if(esCorta(q)){
-    const input=document.getElementById("short-answer");
-    if(!input) return {ok:null, reason:"Escribe una respuesta."};
-    const valor=input.value.trim();
-    if(valor==="") return {ok:null, reason:"Escribe una respuesta."};
-    respuestasUsuario[idxPregunta]=valor;
-    return {ok: coincideCorta(valor, q.respuestas), q, idxPregunta};
-  }
-
-  return {ok:null, reason:"Tipo de pregunta desconocido: "+q.tipo};
-}
-
-function abrirFeedback(info){
-  ultimoFeedback = info;
-  const overlay=document.getElementById("overlay");
-  const badge=document.getElementById("fb-badge");
-  const title=document.getElementById("fb-title");
-  const explain=document.getElementById("fb-explain");
-
-  overlay.classList.remove("hidden");
-  badge.className = "badge " + (info.ok ? "ok":"no");
-  badge.innerHTML = info.ok ? "✅ Correcto" : "❌ Casi: mira la idea clave";
-  title.textContent = info.q.es;
-  explain.innerHTML = info.q.explicacion ?? "Sin explicación.";
-}
-function cerrarFeedback(){ document.getElementById("overlay").classList.add("hidden"); }
-function continuarTrasFeedback(){
-  cerrarFeedback();
-  indice++;
-  if(indice >= preguntas.length) mostrarResultados();
-  else renderPregunta();
-}
-
-function siguiente(){
-  const res = guardarYCorregirActual();
-  if(res.ok === null){ alert(res.reason || "Responde antes de continuar."); return; }
-  abrirFeedback(res);
-}
-function anterior(){
-  if(indice===0) return;
-  indice--;
-  renderPregunta();
-}
-
-function mostrarResultados(){
-  document.getElementById("test-card").classList.add("hidden");
-  document.getElementById("result-card").classList.remove("hidden");
-
-  let correctas=0;
-  const fallos=[];
-  preguntas.forEach((q, idx)=>{
-    const resp = respuestasUsuario[idx];
-    if(resp==null){ fallos.push({q, motivo:"Sin responder"}); return; }
-    if(esMulti(q)){
-      if(resp===q.correcta) correctas++;
-      else fallos.push({q, motivo:"Incorrecta"});
-    } else {
-      if(coincideCorta(resp, q.respuestas)) correctas++;
-      else fallos.push({q, motivo:"No coincide"});
-    }
-  });
-
-  const total=preguntas.length;
-  const errores=total-correctas;
-
-  let html = `
-    <h2>Resultados (prueba rápida)</h2>
-    <div class="summary">✅ Aciertos: <strong>${correctas}</strong> / ${total}<br>❌ Para repasar: <strong>${errores}</strong></div>
-  `;
-  if(fallos.length){
-    html += `<div class="summary" style="margin-top:10px">Repasa estas:</div><ul class="list-fails">`;
-    fallos.forEach(f=>{
-      html += `<li><span class="qtitle">${f.q.es}</span><span class="why">${f.motivo}. ${f.q.explicacion ?? ""}</span></li>`;
-    });
-    html += `</ul>`;
-  }
-  html += `<div class="summary" style="margin-top:14px;text-align:center">
-    <button class="btn btn-primary" onclick="location.reload()">🔁 Repetir</button>
-  </div>`;
-
-  document.getElementById("result-content").innerHTML = html;
-}
-
-/* INICIO */
-renderPregunta();
-</script>
+  <!-- JS externo (clave para GitHub Pages sin problemas) -->
+  <script src="./app.js" defer></script>
 </body>
 </html>
