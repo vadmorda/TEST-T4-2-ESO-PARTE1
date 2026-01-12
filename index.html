@@ -34,6 +34,7 @@
     opacity:.9;pointer-events:none;
   }
   .card-inner{position:relative;z-index:1}
+
   h1{margin:0 0 3px;text-align:center;font-size:1.45rem;font-weight:800;color:#f9fafb}
   .tagline{margin:0 0 16px;text-align:center;font-size:.9rem;color:#9ca3af}
   .pill-row{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:14px;font-size:.8rem;color:#9ca3af}
@@ -82,11 +83,11 @@
   .option:hover{border-color:#38bdf8;transform:translateY(-1px);background:radial-gradient(circle at 0 0, rgba(56,189,248,.22), transparent 65%)}
   .option input{margin-top:4px;accent-color:#38bdf8;cursor:pointer}
   .option-text{font-size:.95rem;color:#e5e7eb}
+
   .short-answer{
     width:100%;margin-top:8px;padding:10px 12px;border-radius:14px;
     border:1px solid rgba(148,163,184,.7);
     background:rgba(15,23,42,.8);color:#e5e7eb;font-size:.97rem;outline:none;
-    transition:border-color .15s ease, box-shadow .15s ease, background .15s ease;
   }
   .short-answer::placeholder{color:#6b7280}
   .short-answer:focus{border-color:#38bdf8;box-shadow:0 0 0 1px rgba(56,189,248,.55);background:rgba(15,23,42,.95)}
@@ -106,6 +107,19 @@
   .btn:disabled{opacity:.4;cursor:default;transform:none;box-shadow:none}
 
   .hidden{display:none}
+
+  /* Error panel */
+  .err{
+    margin:10px 0 0;
+    padding:10px 12px;
+    border-radius:14px;
+    border:1px solid rgba(239,68,68,.55);
+    background:rgba(127,29,29,.25);
+    color:#fecaca;
+    font-size:.88rem;
+    line-height:1.25;
+    white-space:pre-wrap;
+  }
 
   /* Feedback modal */
   .overlay{
@@ -157,7 +171,6 @@
 <body>
 <div class="shell">
 
-  <!-- TARJETA DEL TEST -->
   <div id="test-card" class="card">
     <div class="card-inner">
       <h1>Test · al-Ándalus (apartados 1–3)</h1>
@@ -169,24 +182,21 @@
       </div>
 
       <div class="progress-wrap">
-        <div class="progress-bar-bg">
-          <div id="progress-bar" class="progress-bar-fill"></div>
-        </div>
+        <div class="progress-bar-bg"><div id="progress-bar" class="progress-bar-fill"></div></div>
         <div id="progress-label" class="progress-label"></div>
       </div>
 
       <div id="question-container" class="question-block"></div>
+      <div id="err" class="err hidden"></div>
     </div>
   </div>
 
-  <!-- TARJETA DE RESULTADOS -->
   <div id="result-card" class="card hidden">
     <div class="card-inner" id="result-content"></div>
   </div>
 
 </div>
 
-<!-- FEEDBACK MODAL -->
 <div id="overlay" class="overlay hidden" role="dialog" aria-modal="true">
   <div class="modal">
     <div id="fb-badge" class="badge"></div>
@@ -200,399 +210,314 @@
 </div>
 
 <script>
-// ===================================================
-// IMÁGENES (Wikimedia Commons: libres con licencia)
-// Usamos Special:FilePath para que funcionen directo.
-// ===================================================
+/* Mostrar errores en pantalla (para no “quedarse en blanco”) */
+window.addEventListener("error", (e) => {
+  const box = document.getElementById("err");
+  if (!box) return;
+  box.classList.remove("hidden");
+  box.textContent =
+    "⚠️ Error de JavaScript:\n" +
+    (e.message || "Error") +
+    (e.filename ? ("\nArchivo: " + e.filename) : "") +
+    (typeof e.lineno === "number" ? ("\nLínea: " + e.lineno) : "");
+});
+
+/* Imágenes libres (si fallan, NO bloquean el test) */
 const IMG = {
   mezquita: {
     src: "https://commons.wikimedia.org/wiki/Special:FilePath/C%C3%B3rdoba%20-%20Mezquita-Catedral%20-%20Interior%20-%2004.jpg?width=1200",
-    credit: "Foto: Wikimedia Commons (CC BY-SA).",
+    credit: "Wikimedia Commons (CC BY-SA).",
     link: "https://commons.wikimedia.org/wiki/File:C%C3%B3rdoba_-_Mezquita-Catedral_-_Interior_-_04.jpg"
   },
   medinaAzahara: {
     src: "https://commons.wikimedia.org/wiki/Special:FilePath/Cordoba%20-%20Medina%20Azahara%2007.jpg?width=1200",
-    credit: "Foto: Wikimedia Commons (CC BY-SA 3.0 ES).",
+    credit: "Wikimedia Commons (CC BY-SA).",
     link: "https://commons.wikimedia.org/wiki/File:Cordoba_-_Medina_Azahara_07.jpg"
   },
   torreOro: {
     src: "https://commons.wikimedia.org/wiki/Special:FilePath/Torre%20del%20Oro%2C%20Seville%2C%20Spain.jpg?width=1200",
-    credit: "Foto: Wikimedia Commons (CC BY-SA 4.0).",
+    credit: "Wikimedia Commons (CC BY-SA).",
     link: "https://commons.wikimedia.org/wiki/File:Torre_del_Oro,_Seville,_Spain.jpg"
   },
   patioLeones: {
     src: "https://commons.wikimedia.org/wiki/Special:FilePath/Patio%20de%20los%20Leones%20Alhambra%20Granada.jpg?width=1200",
-    credit: "Foto: Wikimedia Commons (licencia indicada en Commons).",
+    credit: "Wikimedia Commons (licencia en Commons).",
     link: "https://commons.wikimedia.org/wiki/File:Patio_de_los_Leones_Alhambra_Granada.jpg"
   },
   mapConquista711: {
     src: "https://commons.wikimedia.org/wiki/Special:FilePath/Al-Andalus-711-end.svg?width=1200",
-    credit: "Mapa: Wikimedia Commons (SVG).",
+    credit: "Wikimedia Commons.",
     link: "https://commons.wikimedia.org/wiki/File:Al-Andalus-711-end.svg"
   },
+  // Si este mapa concreto no carga, no pasa nada; sigue funcionando el test.
   mapAlmanzor: {
     src: "https://commons.wikimedia.org/wiki/Special:FilePath/Map%20Almanzor%20campaigns-es.svg?width=1200",
-    credit: "Mapa: Wikimedia Commons (autor Redtony).",
+    credit: "Wikimedia Commons.",
     link: "https://commons.wikimedia.org/wiki/File:Map_Almanzor_campaigns-es.svg"
   },
   mapTaifas1030: {
     src: "https://commons.wikimedia.org/wiki/Special:FilePath/Map%20Iberian%20Peninsula%201030-es.svg?width=1200",
-    credit: "Mapa: Wikimedia Commons (fuente UT Austin / Crates).",
+    credit: "Wikimedia Commons.",
     link: "https://commons.wikimedia.org/wiki/File:Map_Iberian_Peninsula_1030-es.svg"
   },
   batallaNavas: {
     src: "https://commons.wikimedia.org/wiki/Special:FilePath/Battle%20of%20las%20navas%20de%20tolosa.jpg?width=1200",
-    credit: "Obra en dominio público (repro PD-Art) en Wikimedia Commons.",
+    credit: "Wikimedia Commons (dominio público / PD).",
     link: "https://commons.wikimedia.org/wiki/File:Battle_of_las_navas_de_tolosa.jpg"
   },
   abdRahmanIII: {
     src: "https://commons.wikimedia.org/wiki/Special:FilePath/Abd%20al%20Rahman%20III.jpg?width=900",
-    credit: "Imagen: reproducción de obra en dominio público (Wikimedia Commons).",
+    credit: "Wikimedia Commons (PD/según ficha).",
     link: "https://commons.wikimedia.org/wiki/File:Abd_al_Rahman_III.jpg"
-  },
-  almoravidQubba: {
-    src: "https://commons.wikimedia.org/wiki/Special:FilePath/C%C3%BApula%20almor%C3%A1vide%20(Marrakech).jpg?width=1200",
-    credit: "Foto: Wikimedia Commons (licencia indicada en Commons).",
-    link: "https://commons.wikimedia.org/wiki/File:C%C3%BApula_almor%C3%A1vide_(Marrakech).jpg"
   }
 };
 
-// ===================================================
-// UTILIDADES
-// ===================================================
 function normalizar(str){
   return String(str)
     .toLowerCase()
-    .normalize("NFD").replace(/[\u0300-\u036f]/g,"")  // quita acentos
+    .normalize("NFD").replace(/[\u0300-\u036f]/g,"")
     .replace(/[^a-z0-9\s-]/g,"")
     .trim()
     .replace(/\s+/g," ");
 }
-function incluyeEsperado(dado, esperados){
+function esMulti(q){ return q.tipo === "multi" || q.tipo === "img-multi"; }
+function esCorta(q){ return q.tipo === "corta" || q.tipo === "img-corta"; }
+function coincideCorta(dado, esperados){
   const d = normalizar(dado);
-  return esperados.some(e => normalizar(e) === d);
+  return (esperados || []).some(e => normalizar(e) === d);
 }
 
-// ===================================================
-// 40 PREGUNTAS (1–3): multi + corta + con imagen
-// En modo práctica: tras responder, se muestra explicación.
-// ===================================================
+/* ======= PREGUNTAS (mismo bloque que te pasé antes) ======= */
+/* OJO: aquí solo pongo 5 para probar el funcionamiento.
+   Cuando confirmes que ya se ve y avanza, pego las 40 completas
+   (o te las dejo en un JSON aparte). */
 const preguntas = [
-  // --- CONQUISTA Y EMIRATO DEPENDIENTE (1) ---
   {
     tipo:"multi",
     es:"¿En qué año comenzó la conquista musulmana de la Península Ibérica?",
     hint:"Dato clave de inicio.",
     opciones:["711","732","756"],
     correcta:0,
-    explicacion:"Comienza en <strong>711</strong>, cuando las tropas dirigidas por Tariq cruzan el Estrecho y derrotan al rey visigodo Rodrigo en Guadalete."
-  },
-  {
-    tipo:"multi",
-    es:"¿Qué batalla marcó la derrota del rey visigodo Rodrigo?",
-    hint:"Relaciona conquista y reino visigodo.",
-    opciones:["Batalla de Las Navas de Tolosa","Batalla de Guadalete","Batalla de Covadonga"],
-    correcta:1,
-    explicacion:"La batalla de <strong>Guadalete (711)</strong> abre el camino para la rápida ocupación del territorio."
-  },
-  {
-    tipo:"corta",
-    es:"Escribe el nombre del general que cruzó el Estrecho en 711 (una palabra).",
-    hint:"Pista: suele aparecer como ‘Tariq’.",
-    respuestas:["tariq","tariq ibn ziyad","tarik","tarik ibn ziyad"],
-    explicacion:"El general fue <strong>Tariq (Tariq ibn Ziyad)</strong>."
-  },
-  {
-    tipo:"multi",
-    es:"Entre 711 y 716, los musulmanes dominaron casi toda la península, excepto…",
-    hint:"Piensa en las zonas montañosas del norte.",
-    opciones:["La franja cantábrica y parte del oeste de los Pirineos","Toda la costa mediterránea","La Meseta Sur"],
-    correcta:0,
-    explicacion:"Quedaron fuera sobre todo <strong>zonas del norte</strong> (franja cantábrica) y áreas pirenaicas occidentales."
-  },
-  {
-    tipo:"multi",
-    es:"¿Cómo llamaron los musulmanes al territorio peninsular bajo su poder?",
-    hint:"Nombre fundamental del tema.",
-    opciones:["Hispania","al-Ándalus","al-Magreb"],
-    correcta:1,
-    explicacion:"El territorio conquistado se denominó <strong>al-Ándalus</strong>."
-  },
-  {
-    tipo:"multi",
-    es:"En la etapa del emirato dependiente (714–756), el emir dependía del califa de…",
-    hint:"Capital del califato omeya oriental.",
-    opciones:["Roma","Damasco","Córdoba"],
-    correcta:1,
-    explicacion:"En el emirato dependiente, el gobernador dependía del califa de <strong>Damasco</strong>."
-  },
-  {
-    tipo:"corta",
-    es:"Escribe la capital del emirato en al-Ándalus (una palabra).",
-    hint:"Ciudad clave del tema.",
-    respuestas:["cordoba","córdoba"],
-    explicacion:"La capital se estableció en <strong>Córdoba</strong>."
-  },
-  {
-    tipo:"multi",
-    es:"¿Qué derrota (732) frenó las expediciones musulmanas más allá de los Pirineos?",
-    hint:"Nombre que aparece en muchos libros como Poitiers.",
-    opciones:["Poitiers","Guadalete","Toledo"],
-    correcta:0,
-    explicacion:"La derrota de <strong>Poitiers (732)</strong> frente a los francos frenó el avance en el sur de la Galia."
-  },
-
-  // --- EMIRATO INDEPENDIENTE Y CALIFATO (2) ---
-  {
-    tipo:"multi",
-    es:"¿En qué año comenzó el emirato independiente de Córdoba?",
-    hint:"Cambio clave: ya no obedece políticamente al califa abasí.",
-    opciones:["756","929","1031"],
-    correcta:0,
-    explicacion:"El emirato independiente comienza en <strong>756</strong> con Abderramán I."
-  },
-  {
-    tipo:"corta",
-    es:"¿Quién proclamó el emirato independiente en 756? (nombre)",
-    hint:"Empieza por ‘Abder…’.",
-    respuestas:["abderraman i","abderraman","abderraman primero","abderramán i","abderramán"],
-    explicacion:"Fue <strong>Abderramán I</strong>, un omeya que escapó de Oriente."
-  },
-  {
-    tipo:"multi",
-    es:"¿Qué significaba que el emirato fuese ‘independiente’?",
-    hint:"No cambia la religión, cambia la política.",
-    opciones:[
-      "Que dejó de existir el islam en al-Ándalus",
-      "Que dejó de obedecer políticamente al califa abasí",
-      "Que desaparecieron los impuestos"
-    ],
-    correcta:1,
-    explicacion:"Independiente = <strong>no obediencia política</strong> al califa (aunque se reconociera su autoridad religiosa)."
-  },
-  {
-    tipo:"multi",
-    es:"¿En qué año Abderramán III se proclamó califa?",
-    hint:"Inicio oficial del califato cordobés.",
-    opciones:["929","912","976"],
-    correcta:0,
-    explicacion:"En <strong>929</strong> Abderramán III se proclama califa: máxima autoridad política y religiosa en al-Ándalus."
+    explicacion:"Comienza en <strong>711</strong> con la victoria musulmana en Guadalete."
   },
   {
     tipo:"img-multi",
-    es:"Observa la imagen. ¿A quién representa?",
-    hint:"Es un personaje clave del califato.",
-    img: IMG.abdRahmanIII,
-    opciones:["Abderramán III","Almanzor","Al-Hakam II"],
-    correcta:0,
-    explicacion:"Es <strong>Abderramán III</strong>, quien proclamó el califato en 929."
-  },
-  {
-    tipo:"multi",
-    es:"Al proclamarse califa, Abderramán III pasó a ser también…",
-    hint:"No solo gobernante político.",
-    opciones:["Un noble cristiano","La máxima autoridad religiosa de al-Ándalus","Un rey visigodo"],
-    correcta:1,
-    explicacion:"El califa era <strong>jefe político y autoridad religiosa</strong> en su territorio."
-  },
-  {
-    tipo:"multi",
-    es:"Para gobernar, el califa contaba con la ayuda del hayib, que era como…",
-    hint:"Equivalencia actual aproximada.",
-    opciones:["Un campesino libre","Un primer ministro","Un obispo"],
-    correcta:1,
-    explicacion:"El <strong>hayib</strong> actuaba como una especie de <strong>primer ministro</strong>."
-  },
-  {
-    tipo:"corta",
-    es:"Escribe el nombre del cargo parecido a ‘primer ministro’ en el califato (una palabra).",
-    hint:"Empieza por ha-.",
-    respuestas:["hayib","hajib"],
-    explicacion:"El cargo era el <strong>hayib</strong>."
-  },
-  {
-    tipo:"multi",
-    es:"¿Quiénes gobernaban provincias y marcas fronterizas (Zaragoza, Toledo, Mérida) en el califato?",
-    hint:"Funcionarios del califa.",
-    opciones:["Walíes","Siervos","Visigodos"],
-    correcta:0,
-    explicacion:"Los <strong>walíes</strong> gobernaban provincias y fronteras en nombre del califa."
-  },
-  {
-    tipo:"img-multi",
-    es:"Esta construcción es un símbolo de la Córdoba califal. ¿Qué monumento es?",
+    es:"Observa la imagen. ¿Qué monumento es?",
     hint:"Arcos bicolores muy característicos.",
     img: IMG.mezquita,
     opciones:["La Mezquita de Córdoba","La Alhambra","La Giralda"],
     correcta:0,
-    explicacion:"Es la <strong>Mezquita de Córdoba</strong>, ampliada y enriquecida en época califal."
-  },
-  {
-    tipo:"multi",
-    es:"¿Qué califa impulsó especialmente la cultura y el arte tras Abderramán III?",
-    hint:"Su nombre empieza por Al-.",
-    opciones:["Al-Hakam II","Musa ibn Nusayr","Rodrigo"],
-    correcta:0,
-    explicacion:"<strong>Al-Hakam II</strong> continuó la labor de su padre e impulsó cultura y arte."
-  },
-  {
-    tipo:"img-multi",
-    es:"Observa la imagen. ¿Qué conjunto arqueológico es?",
-    hint:"Ciudad palatina cerca de Córdoba.",
-    img: IMG.medinaAzahara,
-    opciones:["Medina Azahara","Toledo","Sevilla"],
-    correcta:0,
-    explicacion:"Es <strong>Medina Azahara</strong>, ciudad palatina vinculada al poder omeya en al-Ándalus."
-  },
-  {
-    tipo:"multi",
-    es:"Medina Azahara se construyó como…",
-    hint:"Piensa en residencia y sede del poder.",
-    opciones:["Una aldea agrícola","Una residencia y sede del gobierno","Un castillo cristiano"],
-    correcta:1,
-    explicacion:"Se levantó como <strong>residencia y sede del gobierno</strong> en las afueras de Córdoba."
-  },
-
-  // --- ALMANZOR Y CRISIS DEL CALIFATO (2) ---
-  {
-    tipo:"multi",
-    es:"Tras la muerte de Al-Hakam II, quien concentró gran poder político y militar fue…",
-    hint:"Figura clave de las razias.",
-    opciones:["Almanzor","Abderramán I","Fernando III"],
-    correcta:0,
-    explicacion:"Tras Al-Hakam II, el poder lo concentró <strong>Almanzor</strong> (hayib) mediante campañas militares."
+    explicacion:"Es la <strong>Mezquita de Córdoba</strong>, clave en época de al-Ándalus."
   },
   {
     tipo:"corta",
-    es:"¿Cómo se llamaban las campañas de saqueo contra territorios cristianos? (una palabra)",
-    hint:"Aparece como ‘ra…’.",
-    respuestas:["razias","razzias","razzia","razia"],
-    explicacion:"Se llamaban <strong>razias</strong> (campañas de saqueo)."
-  },
-  {
-    tipo:"img-multi",
-    es:"Observa el mapa. ¿Qué representa principalmente?",
-    hint:"Flechas hacia el norte.",
-    img: IMG.mapAlmanzor,
-    opciones:["Las expediciones (razias) de Almanzor","Las rutas comerciales romanas","La conquista de 711"],
-    correcta:0,
-    explicacion:"El mapa muestra las <strong>expediciones de Almanzor</strong> hacia territorios cristianos."
+    es:"Escribe el año del inicio del califato de Córdoba (solo números).",
+    hint:"Abderramán III.",
+    respuestas:["929"],
+    explicacion:"El califato comienza en <strong>929</strong>."
   },
   {
     tipo:"multi",
-    es:"Según el texto, entre los ataques destacados de Almanzor estuvieron…",
-    hint:"Dos ciudades del norte.",
-    opciones:["Barcelona y Santiago de Compostela","Granada y Málaga","Córdoba y Sevilla"],
-    correcta:0,
-    explicacion:"Destacan los ataques a <strong>Barcelona</strong> y <strong>Santiago de Compostela</strong>."
-  },
-  {
-    tipo:"multi",
-    es:"¿Qué ocurrió tras la etapa de Almanzor y sus sucesores?",
-    hint:"La clave es la debilidad del poder central.",
-    opciones:["Se fortaleció el poder central","Comenzaron graves problemas internos","Se unificó la península"],
-    correcta:1,
-    explicacion:"Tras Almanzor, hubo <strong>inestabilidad</strong> y <strong>problemas internos</strong> que debilitaron el califato."
-  },
-  {
-    tipo:"multi",
-    es:"¿En qué año se considera que desaparece el califato y se fragmenta al-Ándalus?",
+    es:"¿En qué año desaparece el califato y se fragmenta al-Ándalus?",
     hint:"Inicio del periodo de taifas.",
-    opciones:["1031","1086","1246"],
+    opciones:["1031","1086","1212"],
     correcta:0,
-    explicacion:"En <strong>1031</strong> se considera que desaparece el califato y al-Ándalus se fragmenta."
-  },
-
-  // --- TAIFAS (3) ---
-  {
-    tipo:"multi",
-    es:"Tras 1031, al-Ándalus se dividió en numerosos reinos llamados…",
-    hint:"Palabra clave del apartado 3.",
-    opciones:["Taifas","Marcas","Condados"],
-    correcta:0,
-    explicacion:"Se formaron reinos o <strong>taifas</strong>, reflejo de divisiones políticas y sociales."
+    explicacion:"En <strong>1031</strong> se considera que desaparece el califato."
   },
   {
     tipo:"img-multi",
-    es:"Observa el mapa. ¿Qué etapa ilustra principalmente?",
-    hint:"Muchos territorios pequeños.",
-    img: IMG.mapTaifas1030,
-    opciones:["Los reinos de taifas","El califato unificado","La conquista de 711"],
+    es:"Observa la imagen. ¿Qué lugar nazarí es?",
+    hint:"Patio muy famoso.",
+    img: IMG.patioLeones,
+    opciones:["Patio de los Leones (Alhambra)","Mezquita de Córdoba","Torre del Oro"],
     correcta:0,
-    explicacion:"El mapa representa la <strong>fragmentación en taifas</strong> tras el fin del califato."
-  },
-  {
-    tipo:"multi",
-    es:"Las taifas, para evitar ataques, pagaban a los reinos cristianos…",
-    hint:"Término económico-político.",
-    opciones:["Parias","Diezmos","Feudos"],
-    correcta:0,
-    explicacion:"Pagaban <strong>parias</strong> (tributos) a monarcas cristianos para comprar paz o apoyo."
-  },
-  {
-    tipo:"corta",
-    es:"Escribe el nombre del tributo que pagaban muchas taifas a reinos cristianos (una palabra).",
-    hint:"Empieza por pa-.",
-    respuestas:["parias","paria"],
-    explicacion:"El tributo se llamaba <strong>parias</strong>."
-  },
-  {
-    tipo:"multi",
-    es:"¿Qué importante ciudad cayó en manos cristianas en 1085?",
-    hint:"Hecho clave que precipita ayudas norteafricanas.",
-    opciones:["Toledo","Córdoba","Granada"],
-    correcta:0,
-    explicacion:"En <strong>1085</strong> cayó <strong>Toledo</strong>, lo que aumentó la presión sobre al-Ándalus."
-  },
+    explicacion:"Es el <strong>Patio de los Leones</strong> en la <strong>Alhambra</strong>."
+  }
+];
 
-  // --- ALMORÁVIDES (3) ---
-  {
-    tipo:"multi",
-    es:"¿A quién pidieron ayuda los musulmanes tras el avance cristiano (primero)?",
-    hint:"Orden: primero uno, luego otro.",
-    opciones:["A los almorávides","A los romanos","A los visigodos"],
-    correcta:0,
-    explicacion:"Primero pidieron ayuda a los <strong>almorávides</strong>, bereberes del norte de África."
-  },
-  {
-    tipo:"multi",
-    es:"Los almorávides eran…",
-    hint:"Procedencia y rasgo religioso.",
-    opciones:[
-      "Guerreros bereberes del norte de África con islam estricto",
-      "Nobles visigodos cristianos",
-      "Mercaderes italianos"
-    ],
-    correcta:0,
-    explicacion:"Eran <strong>bereberes</strong> del norte de África y defendían principios <strong>estrictos</strong> del islam."
-  },
-  {
-    tipo:"multi",
-    es:"¿En qué año cruzaron el Estrecho para frenar el avance cristiano?",
-    hint:"Final del XI.",
-    opciones:["1086","1146","1212"],
-    correcta:0,
-    explicacion:"Cruzaron en <strong>1086</strong> para intentar frenar el avance cristiano."
-  },
-  {
-    tipo:"img-multi",
-    es:"Observa la imagen. Es un ejemplo asociado al mundo almorávide. ¿Qué ves?",
-    hint:"Arquitectura en Marrakech.",
-    img: IMG.almoravidQubba,
-    opciones:["Una cúpula (qubba) almorávide","Un acueducto romano","Un castillo visigodo"],
-    correcta:0,
-    explicacion:"Es una <strong>qubba/cúpula</strong> asociada a la arquitectura almorávide en Marrakech."
-  },
-  {
-    tipo:"multi",
-    es:"Según el texto, tras ocupar taifas y aplicar medidas impopulares, al-Ándalus…",
-    hint:"Vuelve a dividirse.",
-    opciones:["Se unificó definitivamente","Se fragmentó de nuevo en segundas taifas","Conquistó Francia"],
-    correcta:1,
-    explicacion:"La impopularidad y el avance cristiano favorecieron la <strong>fragmentación</strong> en <strong>segundas taifas</strong>."
-  },
+/* ======= LÓGICA ======= */
+let orden = [...preguntas.keys()];
+function barajar(arr){
+  for(let i=arr.length-1;i>0;i--){
+    const j=Math.floor(Math.random()*(i+1));
+    [arr[i],arr[j]]=[arr[j],arr[i]];
+  }
+}
+barajar(orden);
 
-  // --- ALMOHADES (3) ---
-  {
-    tipo:"multi",
-    es:"
+let indice = 0;
+let respuestasUsuario = new Array(preguntas.length).fill(null);
+let ultimoFeedback = null;
+
+function actualizarProgreso(){
+  const barra=document.getElementById("progress-bar");
+  const label=document.getElementById("progress-label");
+  const porcentaje=((indice+1)/preguntas.length)*100;
+  barra.style.width=porcentaje+"%";
+  label.textContent=`Pregunta ${indice+1} de ${preguntas.length}`;
+}
+
+function renderPregunta(){
+  const cont=document.getElementById("question-container");
+  const idxPregunta=orden[indice];
+  const q=preguntas[idxPregunta];
+
+  actualizarProgreso();
+
+  let html = `
+    <div class="question-text">
+      <span class="q-es">${q.es}</span>
+      <span class="q-hint">${q.hint ?? ""}</span>
+    </div>
+  `;
+
+  if(q.img){
+    html += `
+      <div class="q-image">
+        <img src="${q.img.src}" alt="Imagen de apoyo"
+             onerror="this.closest('.q-image').style.display='none';">
+        <div class="q-credit">
+          ${q.img.credit} · <a href="${q.img.link}" target="_blank" rel="noopener">Fuente/licencia</a>
+        </div>
+      </div>
+    `;
+  }
+
+  if(esMulti(q)){
+    html += `<div class="options">`;
+    const respGuardada = respuestasUsuario[idxPregunta];
+    q.opciones.forEach((op,iOp)=>{
+      const checked = respGuardada===iOp ? "checked" : "";
+      html += `
+        <label class="option">
+          <input type="radio" name="resp" value="${iOp}" ${checked}>
+          <div class="option-text">${op}</div>
+        </label>
+      `;
+    });
+    html += `</div>`;
+  } else if (esCorta(q)) {
+    const valor = respuestasUsuario[idxPregunta] ?? "";
+    html += `
+      <input id="short-answer" class="short-answer" type="text"
+        value="${valor}"
+        placeholder="Respuesta muy breve (1–3 palabras)">
+      <div class="hint">Escribe lo mínimo imprescindible</div>
+    `;
+  } else {
+    // Si un tipo está mal escrito, lo verás aquí:
+    html += `<div class="err">Tipo de pregunta desconocido: ${q.tipo}</div>`;
+  }
+
+  html += `
+    <div class="nav-row">
+      <button class="btn btn-ghost" onclick="anterior()" ${indice===0 ? "disabled":""}>◀ Anterior</button>
+      <button class="btn btn-primary" onclick="siguiente()">
+        ${indice===preguntas.length-1 ? "Comprobar y terminar" : "Comprobar y seguir ▶"}
+      </button>
+    </div>
+  `;
+
+  cont.innerHTML = html;
+}
+
+function guardarYCorregirActual(){
+  const idxPregunta=orden[indice];
+  const q=preguntas[idxPregunta];
+
+  if(esMulti(q)){
+    const marcada=document.querySelector("input[name='resp']:checked");
+    if(!marcada) return {ok:null, reason:"Marca una opción."};
+    const val=parseInt(marcada.value,10);
+    respuestasUsuario[idxPregunta]=val;
+    return {ok: (val===q.correcta), q, idxPregunta};
+  }
+
+  if(esCorta(q)){
+    const input=document.getElementById("short-answer");
+    if(!input) return {ok:null, reason:"Escribe una respuesta."};
+    const valor=input.value.trim();
+    if(valor==="") return {ok:null, reason:"Escribe una respuesta."};
+    respuestasUsuario[idxPregunta]=valor;
+    return {ok: coincideCorta(valor, q.respuestas), q, idxPregunta};
+  }
+
+  return {ok:null, reason:"Tipo de pregunta desconocido: "+q.tipo};
+}
+
+function abrirFeedback(info){
+  ultimoFeedback = info;
+  const overlay=document.getElementById("overlay");
+  const badge=document.getElementById("fb-badge");
+  const title=document.getElementById("fb-title");
+  const explain=document.getElementById("fb-explain");
+
+  overlay.classList.remove("hidden");
+  badge.className = "badge " + (info.ok ? "ok":"no");
+  badge.innerHTML = info.ok ? "✅ Correcto" : "❌ Casi: mira la idea clave";
+  title.textContent = info.q.es;
+  explain.innerHTML = info.q.explicacion ?? "Sin explicación.";
+}
+function cerrarFeedback(){ document.getElementById("overlay").classList.add("hidden"); }
+function continuarTrasFeedback(){
+  cerrarFeedback();
+  indice++;
+  if(indice >= preguntas.length) mostrarResultados();
+  else renderPregunta();
+}
+
+function siguiente(){
+  const res = guardarYCorregirActual();
+  if(res.ok === null){ alert(res.reason || "Responde antes de continuar."); return; }
+  abrirFeedback(res);
+}
+function anterior(){
+  if(indice===0) return;
+  indice--;
+  renderPregunta();
+}
+
+function mostrarResultados(){
+  document.getElementById("test-card").classList.add("hidden");
+  document.getElementById("result-card").classList.remove("hidden");
+
+  let correctas=0;
+  const fallos=[];
+  preguntas.forEach((q, idx)=>{
+    const resp = respuestasUsuario[idx];
+    if(resp==null){ fallos.push({q, motivo:"Sin responder"}); return; }
+    if(esMulti(q)){
+      if(resp===q.correcta) correctas++;
+      else fallos.push({q, motivo:"Incorrecta"});
+    } else {
+      if(coincideCorta(resp, q.respuestas)) correctas++;
+      else fallos.push({q, motivo:"No coincide"});
+    }
+  });
+
+  const total=preguntas.length;
+  const errores=total-correctas;
+
+  let html = `
+    <h2>Resultados (prueba rápida)</h2>
+    <div class="summary">✅ Aciertos: <strong>${correctas}</strong> / ${total}<br>❌ Para repasar: <strong>${errores}</strong></div>
+  `;
+  if(fallos.length){
+    html += `<div class="summary" style="margin-top:10px">Repasa estas:</div><ul class="list-fails">`;
+    fallos.forEach(f=>{
+      html += `<li><span class="qtitle">${f.q.es}</span><span class="why">${f.motivo}. ${f.q.explicacion ?? ""}</span></li>`;
+    });
+    html += `</ul>`;
+  }
+  html += `<div class="summary" style="margin-top:14px;text-align:center">
+    <button class="btn btn-primary" onclick="location.reload()">🔁 Repetir</button>
+  </div>`;
+
+  document.getElementById("result-content").innerHTML = html;
+}
+
+/* INICIO */
+renderPregunta();
+</script>
+</body>
+</html>
