@@ -1,15 +1,71 @@
-// app.js — versión robusta sin onclick (funciona bien en GitHub Pages)
+// app.js — 40 preguntas (1–3) + corrección SOLO al final (con fallos corregidos)
 
 const $ = (id) => document.getElementById(id);
 
+// =====================
+// Imágenes libres (Commons)
+// =====================
 const IMG = {
   mezquita: {
-    src: "https://commons.wikimedia.org/wiki/Special:FilePath/C%C3%B3rdoba%20-%20Mezquita-Catedral%20-%20Interior%20-%2004.jpg?width=1200",
+    src: "https://commons.wikimedia.org/wiki/Special:FilePath/C%C3%B3rdoba%20-%20Mezquita-Catedral%20-%20Interior%20-%2004.jpg?width=1400",
     credit: "Wikimedia Commons (CC BY-SA).",
     link: "https://commons.wikimedia.org/wiki/File:C%C3%B3rdoba_-_Mezquita-Catedral_-_Interior_-_04.jpg"
+  },
+  medinaAzahara: {
+    src: "https://commons.wikimedia.org/wiki/Special:FilePath/Cordoba%20-%20Medina%20Azahara%2007.jpg?width=1400",
+    credit: "Wikimedia Commons (CC BY-SA).",
+    link: "https://commons.wikimedia.org/wiki/File:Cordoba_-_Medina_Azahara_07.jpg"
+  },
+  torreOro: {
+    src: "https://commons.wikimedia.org/wiki/Special:FilePath/Torre%20del%20Oro%2C%20Seville%2C%20Spain.jpg?width=1400",
+    credit: "Wikimedia Commons (CC BY-SA).",
+    link: "https://commons.wikimedia.org/wiki/File:Torre_del_Oro,_Seville,_Spain.jpg"
+  },
+  patioLeones: {
+    src: "https://commons.wikimedia.org/wiki/Special:FilePath/Patio%20de%20los%20Leones%20Alhambra%20Granada.jpg?width=1400",
+    credit: "Wikimedia Commons (licencia en Commons).",
+    link: "https://commons.wikimedia.org/wiki/File:Patio_de_los_Leones_Alhambra_Granada.jpg"
+  },
+  mapConquista711: {
+    src: "https://commons.wikimedia.org/wiki/Special:FilePath/Al-Andalus-711-end.svg?width=1400",
+    credit: "Wikimedia Commons (SVG).",
+    link: "https://commons.wikimedia.org/wiki/File:Al-Andalus-711-end.svg"
+  },
+  mapAlmanzor: {
+    src: "https://commons.wikimedia.org/wiki/Special:FilePath/Map%20Almanzor%20campaigns-es.svg?width=1400",
+    credit: "Wikimedia Commons (SVG).",
+    link: "https://commons.wikimedia.org/wiki/File:Map_Almanzor_campaigns-es.svg"
+  },
+  mapTaifas1030: {
+    src: "https://commons.wikimedia.org/wiki/Special:FilePath/Map%20Iberian%20Peninsula%201030-es.svg?width=1400",
+    credit: "Wikimedia Commons (SVG).",
+    link: "https://commons.wikimedia.org/wiki/File:Map_Iberian_Peninsula_1030-es.svg"
+  },
+  batallaNavas: {
+    src: "https://commons.wikimedia.org/wiki/Special:FilePath/Battle%20of%20las%20navas%20de%20tolosa.jpg?width=1400",
+    credit: "Wikimedia Commons (PD/según ficha).",
+    link: "https://commons.wikimedia.org/wiki/File:Battle_of_las_navas_de_tolosa.jpg"
+  },
+  abdRahmanIII: {
+    src: "https://commons.wikimedia.org/wiki/Special:FilePath/Abd%20al%20Rahman%20III.jpg?width=1000",
+    credit: "Wikimedia Commons (PD/según ficha).",
+    link: "https://commons.wikimedia.org/wiki/File:Abd_al_Rahman_III.jpg"
+  },
+  genericMap: {
+    src: "https://commons.wikimedia.org/wiki/Special:FilePath/Europe%20in%201000.jpg?width=1400",
+    credit: "Wikimedia Commons (licencia en Commons).",
+    link: "https://commons.wikimedia.org/wiki/File:Europe_in_1000.jpg"
+  },
+  genericMedieval: {
+    src: "https://commons.wikimedia.org/wiki/Special:FilePath/Codex%20Manesse%20miniatur%20Heinrich%20von%20Veldeke.jpg?width=1400",
+    credit: "Wikimedia Commons (PD/según ficha).",
+    link: "https://commons.wikimedia.org/wiki/File:Codex_Manesse_miniatur_Heinrich_von_Veldeke.jpg"
   }
 };
 
+// =====================
+// Helpers
+// =====================
 function normalizar(str) {
   return String(str)
     .toLowerCase()
@@ -27,194 +83,22 @@ function coincideCorta(dado, esperados) {
   return (esperados || []).some(e => normalizar(e) === d);
 }
 
-const preguntas = [
-  {
-    tipo: "multi",
-    es: "¿En qué año comenzó la conquista musulmana de la Península Ibérica?",
-    hint: "Dato clave de inicio.",
-    opciones: ["711", "732", "756"],
-    correcta: 0,
-    explicacion: "Comienza en <strong>711</strong>."
-  },
-  {
-    tipo: "img-multi",
-    es: "Observa la imagen. ¿Qué monumento es?",
-    hint: "Arcos bicolores muy característicos.",
-    img: IMG.mezquita,
-    opciones: ["Mezquita de Córdoba", "Alhambra", "Giralda"],
-    correcta: 0,
-    explicacion: "Es la <strong>Mezquita de Córdoba</strong>."
-  },
-  {
-    tipo: "corta",
-    es: "Escribe el año de inicio del califato (solo números).",
-    hint: "Abderramán III.",
-    respuestas: ["929"],
-    explicacion: "El califato empieza en <strong>929</strong>."
-  }
-];
-
-let orden = [...preguntas.keys()];
 function barajar(arr) {
   for (let i = arr.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
     [arr[i], arr[j]] = [arr[j], arr[i]];
   }
 }
-barajar(orden);
 
-let indice = 0;
-let respuestasUsuario = new Array(preguntas.length).fill(null);
-let ultimoFeedback = null;
-
-function setError(msg) {
-  const box = $("err");
-  if (!box) return;
-  if (!msg) { box.classList.add("hidden"); box.textContent = ""; return; }
-  box.classList.remove("hidden");
-  box.textContent = msg;
-}
-
-window.addEventListener("error", (e) => {
-  setError(`⚠️ Error de JavaScript:\n${e.message}\n${e.filename || ""}\nLínea: ${e.lineno || "?"}`);
-});
-
-function actualizarProgreso() {
-  const barra = $("progress-bar");
-  const label = $("progress-label");
-  const porcentaje = ((indice + 1) / preguntas.length) * 100;
-  barra.style.width = porcentaje + "%";
-  label.textContent = `Pregunta ${indice + 1} de ${preguntas.length}`;
-}
-
-function renderPregunta() {
-  setError(""); // limpia
-  actualizarProgreso();
-
-  const idxPregunta = orden[indice];
-  const q = preguntas[idxPregunta];
-  const cont = $("question-container");
-
-  let html = `
-    <div class="question-text">
-      <span class="q-es">${q.es}</span>
-      <span class="q-hint">${q.hint ?? ""}</span>
-    </div>
-  `;
-
-  if (q.img) {
-    html += `
-      <div class="q-image">
-        <img src="${q.img.src}" alt="Imagen de apoyo"
-             onerror="this.closest('.q-image').style.display='none'">
-        <div class="q-credit">${q.img.credit} ·
-          <a href="${q.img.link}" target="_blank" rel="noopener">Fuente/licencia</a>
-        </div>
-      </div>
-    `;
-  }
-
-  if (esMulti(q)) {
-    html += `<div class="options">`;
-    const respGuardada = respuestasUsuario[idxPregunta];
-    q.opciones.forEach((op, iOp) => {
-      const checked = respGuardada === iOp ? "checked" : "";
-      html += `
-        <label class="option">
-          <input type="radio" name="resp" value="${iOp}" ${checked}>
-          <div class="option-text">${op}</div>
-        </label>
-      `;
-    });
-    html += `</div>`;
-  } else if (esCorta(q)) {
-    const valor = respuestasUsuario[idxPregunta] ?? "";
-    html += `
-      <input id="short-answer" class="short-answer" type="text"
-             value="${valor}" placeholder="Respuesta muy breve (1–3 palabras)">
-      <div class="hint">Escribe lo mínimo imprescindible</div>
-    `;
-  } else {
-    setError("Tipo de pregunta desconocido: " + q.tipo);
-  }
-
-  cont.innerHTML = html;
-
-  // Estado botones
-  $("btn-prev").disabled = (indice === 0);
-  $("btn-next").textContent = (indice === preguntas.length - 1)
-    ? "Comprobar y terminar"
-    : "Comprobar y seguir ▶";
-}
-
-function guardarYCorregirActual() {
-  const idxPregunta = orden[indice];
-  const q = preguntas[idxPregunta];
-
-  if (esMulti(q)) {
-    const marcada = document.querySelector("input[name='resp']:checked");
-    if (!marcada) return { ok: null, reason: "Marca una opción." };
-    const val = parseInt(marcada.value, 10);
-    respuestasUsuario[idxPregunta] = val;
-    return { ok: (val === q.correcta), q, idxPregunta };
-  }
-
-  if (esCorta(q)) {
-    const input = $("short-answer");
-    if (!input) return { ok: null, reason: "Escribe una respuesta." };
-    const valor = input.value.trim();
-    if (!valor) return { ok: null, reason: "Escribe una respuesta." };
-    respuestasUsuario[idxPregunta] = valor;
-    return { ok: coincideCorta(valor, q.respuestas), q, idxPregunta };
-  }
-
-  return { ok: null, reason: "Tipo desconocido: " + q.tipo };
-}
-
-function abrirFeedback(info) {
-  ultimoFeedback = info;
-  $("overlay").classList.remove("hidden");
-
-  const badge = $("fb-badge");
-  badge.className = "badge " + (info.ok ? "ok" : "no");
-  badge.textContent = info.ok ? "✅ Correcto" : "❌ Casi: mira la idea clave";
-
-  $("fb-title").textContent = info.q.es;
-  $("fb-explain").innerHTML = info.q.explicacion ?? "—";
-}
-
-function cerrarFeedback() {
-  $("overlay").classList.add("hidden");
-}
-
-function continuarTrasFeedback() {
-  cerrarFeedback();
-  indice++;
-  if (indice >= preguntas.length) {
-    // Demo: reinicia
-    alert("Fin de demo ✅ (cuando confirmes que funciona, meto las 40 aquí).");
-    location.reload();
-    return;
-  }
-  renderPregunta();
-}
-
-function siguiente() {
-  const res = guardarYCorregirActual();
-  if (res.ok === null) { alert(res.reason); return; }
-  abrirFeedback(res);
-}
-
-function anterior() {
-  if (indice === 0) return;
-  indice--;
-  renderPregunta();
-}
-
-document.addEventListener("DOMContentLoaded", () => {
-  $("btn-prev").addEventListener("click", anterior);
-  $("btn-next").addEventListener("click", siguiente);
-  $("btn-close").addEventListener("click", cerrarFeedback);
-  $("btn-continue").addEventListener("click", continuarTrasFeedback);
-  renderPregunta();
-});
+// =====================
+// 40 preguntas (1–3)
+// =====================
+const preguntas = [
+  // 1) Conquista y emirato dependiente
+  { tipo:"img-multi", img: IMG.mapConquista711, es:"Observa el mapa. ¿Por dónde entraron los ejércitos musulmanes en 711?", hint:"Pista: sur de la Península.", opciones:["Por el Estrecho de Gibraltar (sur)","Por los Pirineos (norte)","Por las Islas Baleares"], correcta:0, explicacion:"Entraron por el <strong>Estrecho de Gibraltar</strong>, avanzando desde el sur." },
+  { tipo:"multi", img: IMG.genericMedieval, es:"¿En qué año comenzó la conquista musulmana de la Península Ibérica?", hint:"Fecha clave.", opciones:["711","732","756"], correcta:0, explicacion:"La conquista comienza en <strong>711</strong>." },
+  { tipo:"multi", img: IMG.genericMedieval, es:"¿Qué batalla marcó la derrota del rey visigodo Rodrigo?", hint:"Conquista inicial.", opciones:["Las Navas de Tolosa","Guadalete","Covadonga"], correcta:1, explicacion:"La batalla de <strong>Guadalete (711)</strong> abre el camino a la ocupación." },
+  { tipo:"corta", img: IMG.genericMedieval, es:"Escribe el nombre del general que cruzó el Estrecho en 711 (1–3 palabras).", hint:"Suele aparecer como Tariq.", respuestas:["tariq","tariq ibn ziyad","tarik","tarik ibn ziyad"], explicacion:"El general fue <strong>Tariq (Tariq ibn Ziyad)</strong>." },
+  { tipo:"multi", img: IMG.genericMap, es:"Entre 711 y 716, los musulmanes dominaron casi toda la península, excepto…", hint:"Piensa en el norte.", opciones:["La franja cantábrica y parte del oeste pirenaico","Toda la costa mediterránea","La Meseta Sur"], correcta:0, explicacion:"Quedaron fuera sobre todo zonas del <strong>norte</strong> (franja cantábrica) y áreas pirenaicas." },
+  { tipo:"multi", img: IMG.genericMedieval, es:"¿Cómo llamaron los musulmanes al territorio peninsular bajo su poder?", hint:"Concepto clave.", opciones:["Hispania","al-Ándalus","al-Magreb"], correcta:1, explicacion:"El territorio conquistado se denominó <strong>al-Ándalus</strong>." },
+  { tipo:"multi", img: IMG.genericMedieval, es:"En el emirato dependiente (714–756), el emir dependía del califa de…", hint:"Capital omeya oriental.", opciones:["Roma","Damasco","Córdoba"], correcta:1, ex
