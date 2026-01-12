@@ -1,4 +1,13 @@
 // app.js — 40 preguntas (1–3) + corrección SOLO al final (con fallos corregidos)
+// === DIAGNÓSTICO: NO BORRAR HASTA QUE FUNCIONE ===
+document.addEventListener("DOMContentLoaded", () => {
+  const ind = document.getElementById("js-indicator");
+  if (ind) ind.textContent = "JS SÍ está cargando ✅";
+});
+window.addEventListener("error", (e) => {
+  const box = document.getElementById("js-error");
+  if (box) box.textContent = `ERROR JS: ${e.message}\n${e.filename || ""}\nLínea: ${e.lineno || "?"}`;
+});
 
 const $ = (id) => document.getElementById(id);
 
